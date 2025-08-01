@@ -2,8 +2,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![WebGL](https://img.shields.io/badge/WebGL-Powered-orange.svg)](https://www.khronos.org/webgl/)
-[![Variations](https://img.shields.io/badge/Variations-30-green.svg)](https://github.com/yourusername/vib34d-holographic-engine)
-[![4D Math](https://img.shields.io/badge/Mathematics-4D-purple.svg)](https://github.com/yourusername/vib34d-holographic-engine)
+[![Variations](https://img.shields.io/badge/Variations-30-green.svg)](https://github.com/domusgpt/vib34d-holographic-engine)
+[![4D Math](https://img.shields.io/badge/Mathematics-4D-purple.svg)](https://github.com/domusgpt/vib34d-holographic-engine)
 
 A production-ready holographic visualization engine combining advanced 4D polytopal mathematics with a 5-layer holographic rendering system. Features 30 built-in variations based on 8 fundamental VIB3 geometries.
 
@@ -31,7 +31,7 @@ A production-ready holographic visualization engine combining advanced 4D polyto
 Simply open `index.html` in a modern web browser:
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/vib34d-holographic-engine.git
+git clone https://github.com/domusgpt/vib34d-holographic-engine.git
 cd vib34d-holographic-engine
 
 # Open in browser
@@ -204,7 +204,7 @@ function HolographicVisualizer() {
 ### Building from Source
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/vib34d-holographic-engine.git
+git clone https://github.com/domusgpt/vib34d-holographic-engine.git
 cd vib34d-holographic-engine
 
 # Install dependencies (when package.json is added)
@@ -284,15 +284,15 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 📧 Contact
 
-- **GitHub Issues**: [Report bugs or request features](https://github.com/yourusername/vib34d-holographic-engine/issues)
-- **Email**: your.email@example.com
-- **Twitter**: [@yourusername](https://twitter.com/yourusername)
+- **GitHub Issues**: [Report bugs or request features](https://github.com/domusgpt/vib34d-holographic-engine/issues)
+- **Email**: phillips.paul.email@gmail.com
+- **Twitter**: [@domusgpt](https://twitter.com/domusgpt)
 
 ---
 
 <p align="center">
 Made with 🌌 by [Your Name]<br>
-<a href="https://github.com/yourusername/vib34d-holographic-engine">View on GitHub</a> • 
-<a href="https://yourusername.github.io/vib34d-holographic-engine">Live Demo</a> • 
+<a href="https://github.com/domusgpt/vib34d-holographic-engine">View on GitHub</a> • 
+<a href="https://domusgpt.github.io/vib34d-holographic-engine">Live Demo</a> • 
 <a href="./docs/api.md">API Docs</a>
 </p>
