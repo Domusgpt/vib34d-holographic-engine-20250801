@@ -251,7 +251,7 @@
         .preset-btn.klein { background: linear-gradient(45deg, #ff8000, #804000); }
         .preset-btn.fractal { background: linear-gradient(45deg, #8000ff, #400080); }
         .preset-btn.wave { background: linear-gradient(45deg, #ff0080, #800040); }
-        .preset-btn.crystal { background: linear-gradient(45deg, #00ff80, #008040); }
+        .preset-btn.crystal { background: linear-gradient(45deg, #00ff80, #008040); }\n        \n        /* NEW ORGANIZED VARIATION GRID STYLES */\n        .variation-section-header {\n            display: flex;\n            justify-content: space-between;\n            align-items: center;\n            padding: 15px 0 10px 0;\n            margin: 20px 0 15px 0;\n            border-bottom: 2px solid var(--primary);\n        }\n        \n        .variation-section-header h4 {\n            color: var(--primary);\n            font-size: 1.1rem;\n            font-weight: bold;\n            margin: 0;\n        }\n        \n        .variation-count {\n            background: rgba(0, 255, 255, 0.2);\n            padding: 4px 12px;\n            border-radius: 15px;\n            font-size: 0.8rem;\n            color: var(--primary);\n        }\n        \n        .geometry-group-header {\n            display: flex;\n            align-items: center;\n            gap: 10px;\n            padding: 8px 0;\n            margin: 15px 0 8px 0;\n            background: rgba(0, 0, 0, 0.3);\n            border-radius: 6px;\n            padding-left: 10px;\n        }\n        \n        .geometry-icon {\n            font-size: 1.2rem;\n            width: 20px;\n            text-align: center;\n        }\n        \n        .geometry-name {\n            color: #fff;\n            font-weight: bold;\n            font-size: 0.85rem;\n            flex: 1;\n        }\n        \n        .geometry-range {\n            background: rgba(255, 255, 255, 0.1);\n            padding: 2px 8px;\n            border-radius: 10px;\n            font-size: 0.75rem;\n            color: rgba(255, 255, 255, 0.8);\n            margin-right: 10px;\n        }\n        \n        .geometry-grid {\n            display: grid;\n            grid-template-columns: repeat(4, 1fr);\n            gap: 6px;\n            margin-bottom: 15px;\n        }\n        \n        .custom-variations-header {\n            background: rgba(255, 255, 0, 0.1);\n            border: 1px solid rgba(255, 255, 0, 0.3);\n            border-radius: 8px;\n            padding: 12px;\n            margin: 15px 0;\n            display: flex;\n            justify-content: space-between;\n            align-items: center;\n        }\n        \n        .custom-info {\n            color: #ffff00;\n            font-size: 0.85rem;\n            font-weight: bold;\n        }\n        \n        .custom-range {\n            background: rgba(255, 255, 0, 0.2);\n            padding: 4px 12px;\n            border-radius: 15px;\n            font-size: 0.8rem;\n            color: #ffff00;\n        }\n        \n        .custom-variations-grid {\n            display: grid;\n            grid-template-columns: repeat(10, 1fr);\n            gap: 4px;\n            margin-bottom: 15px;\n        }\n        \n        /* Enhanced button content */\n        .preset-btn .variation-number {\n            font-size: 0.9rem;\n            font-weight: bold;\n            line-height: 1;\n        }\n        \n        .preset-btn .variation-level {\n            font-size: 0.65rem;\n            opacity: 0.8;\n            line-height: 1;\n        }\n        \n        .preset-btn .variation-type {\n            font-size: 0.6rem;\n            opacity: 0.7;\n            line-height: 1;\n        }\n        \n        .preset-btn.custom-variation {\n            aspect-ratio: 1;\n            font-size: 0.7rem;\n        }\n        \n        .preset-btn.default-variation {\n            aspect-ratio: 1;\n        }\n        \n        /* Active state enhancement */\n        .preset-btn.active {\n            border-color: #fff !important;\n            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);\n            transform: scale(1.1);\n        }
 
         .buttons {
             display: flex;
@@ -731,24 +731,135 @@
                 const grid = document.getElementById('variationGrid');
                 grid.innerHTML = '';
                 
-                for (let i = 0; i < Math.min(16, this.totalVariations); i++) {
-                    const btn = document.createElement('div');
-                    btn.className = 'preset-btn';
-                    btn.textContent = (i + 1).toString().padStart(2, '0');
+                // Create organized sections with clear headers
+                this.createVariationSection(grid, 'DEFAULT VARIATIONS', 0, 30, true);
+                this.createVariationSection(grid, 'CUSTOM VARIATIONS', 30, 100, false);
+            }
+            
+            createVariationSection(container, title, startIndex, endIndex, isDefault) {
+                // Section header
+                const header = document.createElement('div');
+                header.className = 'variation-section-header';
+                header.innerHTML = `
+                    <h4>${title}</h4>
+                    <span class="variation-count">${endIndex - startIndex} variations</span>
+                `;
+                container.appendChild(header);
+                
+                // Geometry organization for default variations
+                if (isDefault) {
+                    const geometries = [
+                        { name: 'TETRAHEDRON', icon: '▲', class: 'tetrahedron' },
+                        { name: 'HYPERCUBE', icon: '⬛', class: 'hypercube' },
+                        { name: 'SPHERE', icon: '●', class: 'sphere' },
+                        { name: 'TORUS', icon: '⭕', class: 'torus' },
+                        { name: 'KLEIN', icon: '∞', class: 'klein' },
+                        { name: 'FRACTAL', icon: '❋', class: 'fractal' },
+                        { name: 'WAVE', icon: '〰️', class: 'wave' },
+                        { name: 'CRYSTAL', icon: '💎', class: 'crystal' }
+                    ];
                     
-                    // Color based on geometry group
-                    const geometryGroup = Math.floor(i / 4);
-                    const geometryClasses = ['tetrahedron', 'hypercube', 'sphere', 'torus', 'klein', 'fractal', 'wave', 'crystal'];
-                    btn.classList.add(geometryClasses[geometryGroup] || 'tetrahedron');
+                    for (let geomIndex = 0; geomIndex < 8; geomIndex++) {
+                        const geom = geometries[geomIndex];
+                        
+                        // Geometry group header
+                        const geomHeader = document.createElement('div');
+                        geomHeader.className = 'geometry-group-header';
+                        geomHeader.innerHTML = `
+                            <span class="geometry-icon">${geom.icon}</span>
+                            <span class="geometry-name">${geom.name}</span>
+                            <span class="geometry-range">${geomIndex * 4 + 1}-${geomIndex * 4 + 4}</span>
+                        `;
+                        container.appendChild(geomHeader);
+                        
+                        // Create 4 variations for this geometry
+                        const geomGrid = document.createElement('div');
+                        geomGrid.className = 'geometry-grid';
+                        
+                        for (let level = 0; level < 4; level++) {
+                            const variationIndex = geomIndex * 4 + level;
+                            const button = this.createVariationButton(
+                                variationIndex, 
+                                geom.class,
+                                `${geom.name} ${level + 1}`,
+                                geom.icon,
+                                true
+                            );
+                            geomGrid.appendChild(button);
+                        }
+                        
+                        container.appendChild(geomGrid);
+                    }
+                } else {
+                    // Custom variations - show in compact grid format
+                    const customHeader = document.createElement('div');
+                    customHeader.className = 'custom-variations-header';
+                    customHeader.innerHTML = `
+                        <div class="custom-info">💾 User-created variations stored locally</div>
+                        <div class="custom-range">Variations 31-100</div>
+                    `;
+                    container.appendChild(customHeader);
                     
-                    btn.addEventListener('click', () => {
-                        this.setVariation(i);
-                        document.querySelectorAll('#variationGrid .preset-btn').forEach(b => b.classList.remove('active'));
-                        btn.classList.add('active');
-                    });
+                    const customGrid = document.createElement('div');
+                    customGrid.className = 'custom-variations-grid';
                     
-                    grid.appendChild(btn);
+                    for (let i = startIndex; i < endIndex; i++) {
+                        const customIndex = i - 30;
+                        const customVar = this.customVariations[customIndex] || { name: `CUSTOM ${customIndex + 1}`, geometry: 0 };
+                        const geometryClasses = ['tetrahedron', 'hypercube', 'sphere', 'torus', 'klein', 'fractal', 'wave', 'crystal'];
+                        const geomClass = geometryClasses[customVar.geometry] || 'tetrahedron';
+                        
+                        const button = this.createVariationButton(
+                            i,
+                            geomClass,
+                            customVar.name || `CUSTOM ${customIndex + 1}`,
+                            (i + 1).toString(),
+                            false
+                        );
+                        customGrid.appendChild(button);
+                    }
+                    
+                    container.appendChild(customGrid);
                 }
+            }
+            
+            createVariationButton(variationIndex, geomClass, name, displayText, isDefault) {
+                const button = document.createElement('div');
+                button.className = `preset-btn ${geomClass} ${isDefault ? 'default-variation' : 'custom-variation'}`;
+                button.dataset.variation = variationIndex;
+                button.title = `${variationIndex + 1}. ${name}`;
+                
+                // Button content
+                if (isDefault) {
+                    button.innerHTML = `
+                        <div class="variation-number">${(variationIndex + 1).toString().padStart(2, '0')}</div>
+                        <div class="variation-level">Level ${(variationIndex % 4) + 1}</div>
+                    `;
+                } else {
+                    button.innerHTML = `
+                        <div class="variation-number">${(variationIndex + 1).toString()}</div>
+                        <div class="variation-type">CUSTOM</div>
+                    `;
+                }
+                
+                // Click handler
+                button.addEventListener('click', () => {
+                    this.setVariation(variationIndex);
+                    this.updateVariationGrid();
+                });
+                
+                return button;
+            }
+            
+            updateVariationGrid() {
+                // Update which variation is currently selected
+                const buttons = document.querySelectorAll('.preset-btn');
+                buttons.forEach(btn => {
+                    btn.classList.remove('active');
+                    if (parseInt(btn.dataset.variation) === this.currentVariation) {
+                        btn.classList.add('active');
+                    }
+                });
             }
             
             updateFromControls() {
