@@ -358,7 +358,7 @@
                 
                 <div class="control-group">
                     <label>Current Variation: <span id="currentVariation">1 - TETRAHEDRON LATTICE</span></label>
-                    <input type="range" id="variationSlider" min="0" max="29" step="1" value="0">
+                    <input type="range" id="variationSlider" min="0" max="99" step="1" value="0">
                 </div>
                 
                 <div class="buttons">
@@ -461,7 +461,10 @@
             constructor() {
                 this.visualizers = [];
                 this.currentVariation = 0;
-                this.totalVariations = 30;
+                this.totalVariations = 100; // 30 default + 70 custom
+                this.customVariations = [];
+                this.variationsStorageKey = 'vib34d-custom-variations';
+                this.userVariationsFolder = 'VIB34D-User-Variations';
                 
                 // Combined parameters from both systems
                 this.params = {
@@ -510,6 +513,134 @@
                 this.populateVariationGrid();
                 this.startRenderLoop();
                 this.setStatus('VIB34D Engine initialized successfully', 'success');
+            }
+            
+            // Custom variation management
+            loadCustomVariations() {
+                try {
+                    const stored = localStorage.getItem(this.variationsStorageKey);
+                    if (stored) {
+                        this.customVariations = JSON.parse(stored);
+                        console.log(`✅ Loaded ${this.customVariations.length} custom variations`);
+                    } else {
+                        // Initialize with empty custom variations
+                        this.customVariations = [];
+                        for (let i = 0; i < 70; i++) {
+                            this.customVariations.push(this.generateRandomCustomVariation(i));
+                        }
+                        this.saveCustomVariations();
+                    }
+                } catch (error) {
+                    console.error('❌ Failed to load custom variations:', error);
+                    this.customVariations = [];
+                }
+            }
+            
+            saveCustomVariations() {
+                try {
+                    localStorage.setItem(this.variationsStorageKey, JSON.stringify(this.customVariations));
+                    console.log('✅ Saved custom variations to localStorage');
+                } catch (error) {
+                    console.error('❌ Failed to save custom variations:', error);
+                }
+            }
+            
+            generateRandomCustomVariation(index) {
+                const geometries = ['TETRAHEDRON', 'HYPERCUBE', 'SPHERE', 'TORUS', 'KLEIN', 'FRACTAL', 'WAVE', 'CRYSTAL'];
+                const geometry = Math.floor(Math.random() * 8);
+                
+                return {
+                    name: `CUSTOM ${geometries[geometry]} ${index + 1}`,
+                    geometry: geometry,
+                    rot4dXW: (Math.random() - 0.5) * 4.0,
+                    rot4dYW: (Math.random() - 0.5) * 4.0,
+                    rot4dZW: (Math.random() - 0.5) * 4.0,
+                    dimension: 3.0 + Math.random() * 1.5,
+                    gridDensity: 4 + Math.random() * 26,
+                    morphFactor: Math.random() * 2.0,
+                    chaos: Math.random(),
+                    speed: 0.1 + Math.random() * 2.9,
+                    hue: Math.floor(Math.random() * 360),
+                    timestamp: Date.now(),
+                    version: '2.0'
+                };
+            }
+            
+            loadCustomVariation(customIndex) {
+                if (customIndex >= 0 && customIndex < this.customVariations.length) {
+                    const customVar = this.customVariations[customIndex];
+                    
+                    // Apply custom parameters
+                    this.params.geometry = customVar.geometry;
+                    this.params.rot4dXW = customVar.rot4dXW;
+                    this.params.rot4dYW = customVar.rot4dYW;
+                    this.params.rot4dZW = customVar.rot4dZW;
+                    this.params.dimension = customVar.dimension;
+                    this.params.gridDensity = customVar.gridDensity;
+                    this.params.morphFactor = customVar.morphFactor;
+                    this.params.chaos = customVar.chaos;
+                    this.params.speed = customVar.speed;
+                    this.params.hue = customVar.hue;
+                    
+                    // Update UI controls
+                    document.getElementById('rot4dXW').value = this.params.rot4dXW;
+                    document.getElementById('rot4dYW').value = this.params.rot4dYW;
+                    document.getElementById('rot4dZW').value = this.params.rot4dZW;
+                    document.getElementById('dimension').value = this.params.dimension;
+                    document.getElementById('gridDensity').value = this.params.gridDensity;
+                    document.getElementById('morphFactor').value = this.params.morphFactor;
+                    document.getElementById('chaos').value = this.params.chaos;
+                    document.getElementById('speed').value = this.params.speed;
+                    document.getElementById('hue').value = this.params.hue;
+                    
+                    this.updateDisplayValues();
+                    this.updateCurrentVariationDisplay();
+                    this.updateVisualizers();
+                    this.setStatus(`Loaded custom variation: ${customVar.name}`, 'success');
+                } else {
+                    // Generate new custom variation if index doesn't exist
+                    const newCustomVar = this.generateRandomCustomVariation(customIndex);
+                    if (customIndex < 70) {
+                        this.customVariations[customIndex] = newCustomVar;
+                        this.saveCustomVariations();
+                        this.loadCustomVariation(customIndex);
+                    }
+                }
+            }
+            
+            saveCurrentAsCustom() {
+                const customIndex = this.currentVariation - 30;
+                if (customIndex >= 0 && customIndex < 70) {
+                    const customVar = {
+                        name: `CUSTOM ${customIndex + 1} - ${new Date().toLocaleDateString()}`,
+                        geometry: this.params.geometry,
+                        rot4dXW: this.params.rot4dXW,
+                        rot4dYW: this.params.rot4dYW,
+                        rot4dZW: this.params.rot4dZW,
+                        dimension: this.params.dimension,
+                        gridDensity: this.params.gridDensity,
+                        morphFactor: this.params.morphFactor,
+                        chaos: this.params.chaos,
+                        speed: this.params.speed,
+                        hue: this.params.hue,
+                        timestamp: Date.now(),
+                        version: '2.0'
+                    };
+                    
+                    this.customVariations[customIndex] = customVar;
+                    this.saveCustomVariations();
+                    this.updateCurrentVariationDisplay();
+                    this.setStatus(`Saved as custom variation ${customIndex + 1}`, 'success');
+                }
+            }
+            
+            // Gallery system integration
+            openGalleryView() {
+                const galleryHTML = this.generateGalleryHTML();
+                const galleryWindow = window.open('', '_blank', 'width=1200,height=800');
+                galleryWindow.document.write(galleryHTML);
+                galleryWindow.document.close();
+                this.setStatus('Gallery opened in new window', 'success');
             }
             
             createVisualizers() {
@@ -651,7 +782,14 @@
             }
             
             updateCurrentVariationDisplay() {
-                const variationName = this.variationNames[this.currentVariation] || `VARIATION ${this.currentVariation + 1}`;
+                let variationName;
+                if (this.currentVariation < 30) {
+                    variationName = this.variationNames[this.currentVariation] || `VARIATION ${this.currentVariation + 1}`;
+                } else {
+                    const customIndex = this.currentVariation - 30;
+                    const customVar = this.customVariations[customIndex];
+                    variationName = customVar ? customVar.name : `CUSTOM ${customIndex + 1}`;
+                }
                 document.getElementById('currentVariation').textContent = `${this.currentVariation + 1} - ${variationName}`;
             }
             
@@ -659,12 +797,13 @@
                 this.currentVariation = Math.max(0, Math.min(this.totalVariations - 1, variation));
                 document.getElementById('variationSlider').value = this.currentVariation;
                 
-                // Generate variation-specific parameters
-                const geometryGroup = Math.floor(this.currentVariation / 4);
-                const variationLevel = this.currentVariation % 4;
-                
-                // Set geometry
-                this.params.geometry = geometryGroup;
+                if (this.currentVariation < 30) {
+                    // Default variation (0-29)
+                    const geometryGroup = Math.floor(this.currentVariation / 4);
+                    const variationLevel = this.currentVariation % 4;
+                    
+                    // Set geometry
+                    this.params.geometry = geometryGroup;
                 
                 // Adjust parameters per variation
                 this.params.gridDensity = 8 + geometryGroup * 2 + variationLevel * 1.5;
@@ -678,10 +817,14 @@
                 document.getElementById('chaos').value = this.params.chaos;
                 document.getElementById('hue').value = this.params.hue;
                 
-                this.updateDisplayValues();
-                this.updateCurrentVariationDisplay();
-                this.updateVisualizers();
-                this.setStatus(`Switched to ${this.variationNames[this.currentVariation]}`, 'success');
+                    this.updateDisplayValues();
+                    this.updateCurrentVariationDisplay();
+                    this.updateVisualizers();
+                    this.setStatus(`Switched to ${this.variationNames[this.currentVariation]}`, 'success');
+                } else {
+                    // Custom variation (30-99)
+                    this.loadCustomVariation(this.currentVariation - 30);
+                }
             }
             
             updateVisualizers() {
