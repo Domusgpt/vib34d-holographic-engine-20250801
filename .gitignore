@@ -1,0 +1,69 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+build/
+*.min.js
+*.min.css
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS files
+Thumbs.db
+desktop.ini
+
+# Testing
+coverage/
+.nyc_output/
+*.log
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Package files
+*.tgz
+*.zip
+*.tar.gz
+
+# Documentation build
+docs/_build/
+docs/.doctrees/
+
+# Asset sources (keep compiled assets)
+assets/*.psd
+assets/*.ai
+assets/*.sketch
+
+# User-specific files
+*.user
+*.userosscache
+*.suo
+
+# Backup files
+*.backup
+*.bak
+*~
+
+# Cache
+.cache/
+.parcel-cache/

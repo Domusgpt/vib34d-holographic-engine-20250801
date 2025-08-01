@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIB34D Integrated Holographic Engine - Production SDK</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00ffff;
+            --primary-dark: #00bfbf;
+            --bg-dark: #000;
+            --bg-panel: rgba(0, 10, 20, 0.95);
+            --text-primary: #ffffff;
+            --text-secondary: #b0eaff;
+            --border: rgba(0, 255, 255, 0.3);
+            --shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+            cursor: crosshair;
+        }
+
+        .holographic-display {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .editor-panel {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            width: 380px;
+            max-height: calc(100vh - 40px);
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            backdrop-filter: blur(20px);
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+        
+        .editor-panel.minimized {
+            transform: translateX(calc(100% - 60px));
+        }
+
+        .editor-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .editor-header h1 {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2rem;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .minimize-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .minimize-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--primary);
+        }
+
+        .editor-content {
+            padding: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 5px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active,
+        .tab-btn:hover {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .control-group select,
+        .control-group input[type="range"] {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+
+        .control-group select {
+            padding: 8px;
+            background: rgba(20, 30, 50, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .control-group input[type="range"] {
+            -webkit-appearance: none;
+            height: 6px;
+            background: linear-gradient(90deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            border-radius: 3px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+        }
+
+        .value-display {
+            font-size: 0.8rem;
+            color: var(--primary);
+            text-align: right;
+            margin-top: 2px;
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .preset-btn {
+            aspect-ratio: 1;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: white;
+            text-align: center;
+            padding: 2px;
+        }
+
+        .preset-btn:hover,
+        .preset-btn.active {
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        /* VIB3 Geometry Colors */
+        .preset-btn.tetrahedron { background: linear-gradient(45deg, #00ffff, #008080); }
+        .preset-btn.hypercube { background: linear-gradient(45deg, #ff00ff, #800080); }
+        .preset-btn.sphere { background: linear-gradient(45deg, #ffff00, #808000); }
+        .preset-btn.torus { background: linear-gradient(45deg, #00ff00, #008000); }
+        .preset-btn.klein { background: linear-gradient(45deg, #ff8000, #804000); }
+        .preset-btn.fractal { background: linear-gradient(45deg, #8000ff, #400080); }
+        .preset-btn.wave { background: linear-gradient(45deg, #ff0080, #800040); }
+        .preset-btn.crystal { background: linear-gradient(45deg, #00ff80, #008040); }
+
+        .buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            background: rgba(0, 255, 255, 0.2);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: rgba(0, 255, 255, 0.4);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .status {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+        }
+
+        .error {
+            color: #ff4444;
+            border-color: #ff4444;
+        }
+
+        .success {
+            color: #44ff44;
+            border-color: #44ff44;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .editor-panel {
+                position: fixed;
+                bottom: 0;
+                top: auto;
+                left: 0;
+                right: 0;
+                width: 100%;
+                max-height: 60vh;
+                border-radius: 12px 12px 0 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <input type="file" id="jsonFileInput" class="file-input" accept=".json" />
+    
+    <!-- 5-Layer Holographic System -->
+    <div class="holographic-display">
+        <canvas id="background-canvas" style="z-index: 1; opacity: 0.2;"></canvas>
+        <canvas id="shadow-canvas" style="z-index: 3; opacity: 0.6; filter: blur(2px) brightness(0.7); mix-blend-mode: multiply; transform: translate(2px, 2px);"></canvas>
+        <canvas id="content-canvas" style="z-index: 5; opacity: 0.8; mix-blend-mode: normal;"></canvas>
+        <canvas id="highlight-canvas" style="z-index: 7; opacity: 0.4; filter: blur(1px) brightness(1.5); mix-blend-mode: screen; transform: translate(-1px, -1px);"></canvas>
+        <canvas id="accent-canvas" style="z-index: 15; opacity: 0.3; filter: blur(2px); mix-blend-mode: color-dodge; transform: scale(1.01);"></canvas>
+    </div>
+    
+    <div class="editor-panel">
+        <div class="editor-header">
+            <h1>VIB34D ENGINE</h1>
+            <button class="minimize-btn" onclick="togglePanel()">−</button>
+        </div>
+        
+        <div class="editor-content">
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="variations">Variations</button>
+                <button class="tab-btn" data-tab="polytopal">Polytopal</button>
+                <button class="tab-btn" data-tab="holographic">Holographic</button>
+                <button class="tab-btn" data-tab="export">Export</button>
+            </div>
+            
+            <!-- Variations Tab (Active Holographic System) -->
+            <div class="tab-content active" id="variations-tab">
+                <div class="control-group">
+                    <label>Holographic Variations (30 Total)</label>
+                    <div class="preset-grid" id="variationGrid">
+                        <!-- Will be populated by JS -->
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label>Current Variation: <span id="currentVariation">1 - TETRAHEDRON LATTICE</span></label>
+                    <input type="range" id="variationSlider" min="0" max="29" step="1" value="0">
+                </div>
+                
+                <div class="buttons">
+                    <button class="btn" onclick="previousVariation()">◀ Prev</button>
+                    <button class="btn" onclick="nextVariation()">Next ▶</button>
+                    <button class="btn" onclick="randomVariation()">🎲 Random</button>
+                </div>
+            </div>
+            
+            <!-- Polytopal Tab -->
+            <div class="tab-content" id="polytopal-tab">
+                <div class="control-group">
+                    <label>VIB3 Geometries</label>
+                    <div class="preset-grid">
+                        <div class="preset-btn tetrahedron" data-geometry="0">Tetrahedron</div>
+                        <div class="preset-btn hypercube" data-geometry="1">Hypercube</div>
+                        <div class="preset-btn sphere" data-geometry="2">Sphere</div>
+                        <div class="preset-btn torus" data-geometry="3">Torus</div>
+                        <div class="preset-btn klein" data-geometry="4">Klein</div>
+                        <div class="preset-btn fractal" data-geometry="5">Fractal</div>
+                        <div class="preset-btn wave" data-geometry="6">Wave</div>
+                        <div class="preset-btn crystal" data-geometry="7">Crystal</div>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label>4D Rotation XW: <span id="rot4dXWValue">0.5</span></label>
+                    <input type="range" id="rot4dXW" min="-2" max="2" step="0.1" value="0.5">
+                </div>
+                
+                <div class="control-group">
+                    <label>4D Rotation YW: <span id="rot4dYWValue">0.3</span></label>
+                    <input type="range" id="rot4dYW" min="-2" max="2" step="0.1" value="0.3">
+                </div>
+                
+                <div class="control-group">
+                    <label>4D Rotation ZW: <span id="rot4dZWValue">0.2</span></label>
+                    <input type="range" id="rot4dZW" min="-2" max="2" step="0.1" value="0.2">
+                </div>
+                
+                <div class="control-group">
+                    <label>Dimension Level: <span id="dimensionValue">3.5</span></label>
+                    <input type="range" id="dimension" min="3.0" max="4.5" step="0.05" value="3.5">
+                </div>
+            </div>
+            
+            <!-- Holographic Tab -->
+            <div class="tab-content" id="holographic-tab">
+                <div class="control-group">
+                    <label>Grid Density: <span id="gridDensityValue">12.0</span></label>
+                    <input type="range" id="gridDensity" min="4" max="30" step="0.5" value="12.0">
+                </div>
+                
+                <div class="control-group">
+                    <label>Morph Factor: <span id="morphFactorValue">0.5</span></label>
+                    <input type="range" id="morphFactor" min="0" max="2" step="0.05" value="0.5">
+                </div>
+                
+                <div class="control-group">
+                    <label>Chaos Intensity: <span id="chaosValue">0.3</span></label>
+                    <input type="range" id="chaos" min="0" max="1" step="0.05" value="0.3">
+                </div>
+                
+                <div class="control-group">
+                    <label>Speed Multiplier: <span id="speedValue">1.0</span></label>
+                    <input type="range" id="speed" min="0.1" max="3" step="0.1" value="1.0">
+                </div>
+                
+                <div class="control-group">
+                    <label>Hue Shift: <span id="hueValue">180°</span></label>
+                    <input type="range" id="hue" min="0" max="360" step="1" value="180">
+                </div>
+            </div>
+            
+            <!-- Export Tab -->
+            <div class="tab-content" id="export-tab">
+                <div class="buttons">
+                    <button class="btn" onclick="exportJSON()">Export JSON</button>
+                    <button class="btn" onclick="exportCSS()">Export CSS</button>
+                    <button class="btn" onclick="exportHTML()">Export HTML</button>
+                    <button class="btn" onclick="exportPNG()">Export PNG</button>
+                </div>
+                
+                <div class="buttons">
+                    <button class="btn" onclick="importJSON()">Import JSON</button>
+                    <button class="btn" onclick="randomizeAll()">Randomize All</button>
+                    <button class="btn" onclick="resetToDefaults()">Reset Defaults</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="status" id="status">Initializing VIB34D Integrated Engine...</div>
+
+    <script>
+        console.log('🌌 VIB34D Integrated Holographic Engine - Production SDK');
+        
+        // INTEGRATED ENGINE CLASS - Combines both systems
+        class VIB34DIntegratedEngine {
+            constructor() {
+                this.visualizers = [];
+                this.currentVariation = 0;
+                this.totalVariations = 30;
+                
+                // Combined parameters from both systems
+                this.params = {
+                    // From Polytopal system
+                    rot4dXW: 0.5,
+                    rot4dYW: 0.3,
+                    rot4dZW: 0.2,
+                    dimension: 3.5,
+                    
+                    // From Holographic system
+                    gridDensity: 12.0,
+                    morphFactor: 0.5,
+                    chaos: 0.3,
+                    speed: 1.0,
+                    hue: 180,
+                    
+                    // Current geometry
+                    geometry: 0
+                };
+                
+                // Interaction state
+                this.mouseX = 0.5;
+                this.mouseY = 0.5;
+                this.mouseIntensity = 0.0;
+                this.clickIntensity = 0.0;
+                
+                // VIB3 30-Variation system
+                this.variationNames = [
+                    'TETRAHEDRON LATTICE', 'TETRAHEDRON FIELD', 'TETRAHEDRON MATRIX', 'TETRAHEDRON RESONANCE',
+                    'HYPERCUBE LATTICE', 'HYPERCUBE FIELD', 'HYPERCUBE MATRIX', 'HYPERCUBE QUANTUM',
+                    'SPHERE LATTICE', 'SPHERE FIELD', 'SPHERE MATRIX', 'SPHERE RESONANCE',
+                    'TORUS LATTICE', 'TORUS FIELD', 'TORUS MATRIX', 'TORUS QUANTUM',
+                    'KLEIN BOTTLE LATTICE', 'KLEIN BOTTLE FIELD', 'KLEIN BOTTLE MATRIX', 'KLEIN BOTTLE QUANTUM',
+                    'FRACTAL LATTICE', 'FRACTAL FIELD', 'FRACTAL QUANTUM',
+                    'WAVE LATTICE', 'WAVE FIELD', 'WAVE QUANTUM',
+                    'CRYSTAL LATTICE', 'CRYSTAL FIELD', 'CRYSTAL MATRIX', 'CRYSTAL QUANTUM'
+                ];
+                
+                this.init();
+            }
+            
+            init() {
+                this.createVisualizers();
+                this.setupControls();
+                this.setupInteractions();
+                this.populateVariationGrid();
+                this.startRenderLoop();
+                this.setStatus('VIB34D Engine initialized successfully', 'success');
+            }
+            
+            createVisualizers() {
+                // Create 5-layer system from Active Holographic Systems
+                const layers = [
+                    { id: 'background-canvas', role: 'background', reactivity: 0.5 },
+                    { id: 'shadow-canvas', role: 'shadow', reactivity: 0.7 },
+                    { id: 'content-canvas', role: 'content', reactivity: 0.9 },
+                    { id: 'highlight-canvas', role: 'highlight', reactivity: 1.1 },
+                    { id: 'accent-canvas', role: 'accent', reactivity: 1.5 }
+                ];
+                
+                layers.forEach(layer => {
+                    const visualizer = new IntegratedHolographicVisualizer(layer.id, layer.role, layer.reactivity, this.currentVariation);
+                    this.visualizers.push(visualizer);
+                });
+                
+                console.log('✅ Created 5-layer integrated holographic system');
+            }
+            
+            setupControls() {
+                // Tab system
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                        
+                        btn.classList.add('active');
+                        document.getElementById(btn.dataset.tab + '-tab').classList.add('active');
+                    });
+                });
+                
+                // Parameter controls
+                const controls = [
+                    'variationSlider', 'rot4dXW', 'rot4dYW', 'rot4dZW', 'dimension',
+                    'gridDensity', 'morphFactor', 'chaos', 'speed', 'hue'
+                ];
+                
+                controls.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.addEventListener('input', () => this.updateFromControls());
+                    }
+                });
+                
+                // Geometry preset buttons
+                document.querySelectorAll('[data-geometry]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('[data-geometry]').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.params.geometry = parseInt(btn.dataset.geometry);
+                        this.updateVisualizers();
+                        this.updateDisplayValues();
+                    });
+                });
+                
+                this.updateDisplayValues();
+            }
+            
+            setupInteractions() {
+                // Mouse interaction
+                document.addEventListener('mousemove', (e) => {
+                    this.mouseX = e.clientX / window.innerWidth;
+                    this.mouseY = 1.0 - e.clientY / window.innerHeight;
+                    this.mouseIntensity = 0.5;
+                    this.updateVisualizers();
+                });
+                
+                // Click interaction
+                document.addEventListener('mousedown', (e) => {
+                    this.clickIntensity = 1.0;
+                    this.updateVisualizers();
+                });
+                
+                // Touch support
+                document.addEventListener('touchmove', (e) => {
+                    if (e.touches.length > 0) {
+                        const touch = e.touches[0];
+                        this.mouseX = touch.clientX / window.innerWidth;
+                        this.mouseY = 1.0 - touch.clientY / window.innerHeight;
+                        this.mouseIntensity = 0.7;
+                        this.updateVisualizers();
+                    }
+                }, { passive: true });
+            }
+            
+            populateVariationGrid() {
+                const grid = document.getElementById('variationGrid');
+                grid.innerHTML = '';
+                
+                for (let i = 0; i < Math.min(16, this.totalVariations); i++) {
+                    const btn = document.createElement('div');
+                    btn.className = 'preset-btn';
+                    btn.textContent = (i + 1).toString().padStart(2, '0');
+                    
+                    // Color based on geometry group
+                    const geometryGroup = Math.floor(i / 4);
+                    const geometryClasses = ['tetrahedron', 'hypercube', 'sphere', 'torus', 'klein', 'fractal', 'wave', 'crystal'];
+                    btn.classList.add(geometryClasses[geometryGroup] || 'tetrahedron');
+                    
+                    btn.addEventListener('click', () => {
+                        this.setVariation(i);
+                        document.querySelectorAll('#variationGrid .preset-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                    });
+                    
+                    grid.appendChild(btn);
+                }
+            }
+            
+            updateFromControls() {
+                // Update parameters from UI controls
+                this.currentVariation = parseInt(document.getElementById('variationSlider').value);
+                this.params.rot4dXW = parseFloat(document.getElementById('rot4dXW').value);
+                this.params.rot4dYW = parseFloat(document.getElementById('rot4dYW').value);
+                this.params.rot4dZW = parseFloat(document.getElementById('rot4dZW').value);
+                this.params.dimension = parseFloat(document.getElementById('dimension').value);
+                this.params.gridDensity = parseFloat(document.getElementById('gridDensity').value);
+                this.params.morphFactor = parseFloat(document.getElementById('morphFactor').value);
+                this.params.chaos = parseFloat(document.getElementById('chaos').value);
+                this.params.speed = parseFloat(document.getElementById('speed').value);
+                this.params.hue = parseFloat(document.getElementById('hue').value);
+                
+                this.updateDisplayValues();
+                this.updateVisualizers();
+                this.updateCurrentVariationDisplay();
+            }
+            
+            updateDisplayValues() {
+                document.getElementById('rot4dXWValue').textContent = this.params.rot4dXW.toFixed(1);
+                document.getElementById('rot4dYWValue').textContent = this.params.rot4dYW.toFixed(1);
+                document.getElementById('rot4dZWValue').textContent = this.params.rot4dZW.toFixed(1);
+                document.getElementById('dimensionValue').textContent = this.params.dimension.toFixed(2);
+                document.getElementById('gridDensityValue').textContent = this.params.gridDensity.toFixed(1);
+                document.getElementById('morphFactorValue').textContent = this.params.morphFactor.toFixed(2);
+                document.getElementById('chaosValue').textContent = this.params.chaos.toFixed(2);
+                document.getElementById('speedValue').textContent = this.params.speed.toFixed(1);
+                document.getElementById('hueValue').textContent = this.params.hue + '°';
+            }
+            
+            updateCurrentVariationDisplay() {
+                const variationName = this.variationNames[this.currentVariation] || `VARIATION ${this.currentVariation + 1}`;
+                document.getElementById('currentVariation').textContent = `${this.currentVariation + 1} - ${variationName}`;
+            }
+            
+            setVariation(variation) {
+                this.currentVariation = Math.max(0, Math.min(this.totalVariations - 1, variation));
+                document.getElementById('variationSlider').value = this.currentVariation;
+                
+                // Generate variation-specific parameters
+                const geometryGroup = Math.floor(this.currentVariation / 4);
+                const variationLevel = this.currentVariation % 4;
+                
+                // Set geometry
+                this.params.geometry = geometryGroup;
+                
+                // Adjust parameters per variation
+                this.params.gridDensity = 8 + geometryGroup * 2 + variationLevel * 1.5;
+                this.params.morphFactor = 0.2 + variationLevel * 0.2;
+                this.params.chaos = variationLevel * 0.2;
+                this.params.hue = (this.currentVariation * 12.27) % 360;
+                
+                // Update UI controls
+                document.getElementById('gridDensity').value = this.params.gridDensity;
+                document.getElementById('morphFactor').value = this.params.morphFactor;
+                document.getElementById('chaos').value = this.params.chaos;
+                document.getElementById('hue').value = this.params.hue;
+                
+                this.updateDisplayValues();
+                this.updateCurrentVariationDisplay();
+                this.updateVisualizers();
+                this.setStatus(`Switched to ${this.variationNames[this.currentVariation]}`, 'success');
+            }
+            
+            updateVisualizers() {
+                this.visualizers.forEach(visualizer => {
+                    visualizer.updateParams(this.params);
+                    visualizer.updateInteraction(this.mouseX, this.mouseY, this.mouseIntensity);
+                    visualizer.clickIntensity = this.clickIntensity;
+                });
+                
+                // Decay click intensity
+                this.clickIntensity *= 0.95;
+                this.mouseIntensity *= 0.98;
+            }
+            
+            startRenderLoop() {
+                const render = () => {
+                    this.visualizers.forEach(visualizer => visualizer.render());
+                    requestAnimationFrame(render);
+                };
+                render();
+            }
+            
+            setStatus(message, type = '') {
+                const status = document.getElementById('status');
+                status.textContent = message;
+                status.className = 'status ' + type;
+                if (type) {
+                    setTimeout(() => {
+                        status.className = 'status';
+                    }, 3000);
+                }
+            }
+            
+            // Export functions that actually work
+            exportJSON() {
+                const config = {
+                    version: "2.0",
+                    type: "vib34d-integrated-config",
+                    name: `${this.variationNames[this.currentVariation]} - ${new Date().toLocaleDateString()}`,
+                    variation: this.currentVariation,
+                    parameters: { ...this.params },
+                    timestamp: Date.now(),
+                    metadata: {
+                        engine: "VIB34D Integrated",
+                        features: ["5-layer holographic", "30 variations", "4D mathematics", "agent-ready"]
+                    }
+                };
+                
+                const json = JSON.stringify(config, null, 2);
+                this.downloadFile(json, 'vib34d-config.json', 'application/json');
+                this.setStatus('Configuration exported as JSON', 'success');
+            }
+            
+            exportCSS() {
+                const config = { ...this.params, variation: this.currentVariation };
+                const cssContent = `/* VIB34D Integrated Holographic CSS */
+.vib34d-holographic {
+    --variation: ${this.currentVariation};
+    --geometry: ${this.params.geometry};
+    --grid-density: ${this.params.gridDensity};
+    --morph-factor: ${this.params.morphFactor};
+    --chaos: ${this.params.chaos};
+    --speed: ${this.params.speed};
+    --hue: ${this.params.hue}deg;
+    --rot-4d-xw: ${this.params.rot4dXW};
+    --rot-4d-yw: ${this.params.rot4dYW};
+    --rot-4d-zw: ${this.params.rot4dZW};
+    --dimension: ${this.params.dimension};
+    
+    background: linear-gradient(45deg, 
+        hsl(${this.params.hue}, 70%, 30%) 0%,
+        hsl(${(this.params.hue + 60) % 360}, 70%, 20%) 100%);
+    
+    animation: holographic-pulse ${3 / this.params.speed}s infinite;
+    transform: perspective(1000px) rotateX(${this.params.rot4dXW * 5}deg) rotateY(${this.params.rot4dYW * 5}deg);
+}
+
+@keyframes holographic-pulse {
+    0% { filter: hue-rotate(0deg) saturate(1); }
+    50% { filter: hue-rotate(${this.params.chaos * 180}deg) saturate(${1 + this.params.morphFactor}); }
+    100% { filter: hue-rotate(360deg) saturate(1); }
+}
+
+/* Configuration: ${JSON.stringify(config)} */`;
+                
+                this.downloadFile(cssContent, 'vib34d-holographic.css', 'text/css');
+                this.setStatus('CSS theme exported', 'success');
+            }
+            
+            exportHTML() {
+                const config = { ...this.params, variation: this.currentVariation };
+                const htmlContent = `<!DOCTYPE html>
+<html><head>
+<title>VIB34D Holographic Export</title>
+<style>
+body { margin: 0; background: #000; font-family: 'Orbitron', monospace; }
+#holographic-canvas { width: 100vw; height: 100vh; }
+</style>
+</head><body>
+<canvas id="holographic-canvas"></canvas>
+<script>
+// VIB34D Configuration
+const vib34dConfig = ${JSON.stringify(config, null, 2)};
+
+// Simplified renderer for exported HTML
+class ExportedHolographicRenderer {
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.config = vib34dConfig;
+        this.time = 0;
+        this.render();
+    }
+    
+    render() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        
+        const ctx = this.ctx;
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Generate holographic pattern based on config
+        const centerX = this.canvas.width / 2;
+        const centerY = this.canvas.height / 2;
+        
+        for (let i = 0; i < this.config.gridDensity * 10; i++) {
+            const angle = (i / (this.config.gridDensity * 10)) * Math.PI * 2;
+            const radius = Math.sin(this.time * 0.001 * this.config.speed + angle * this.config.morphFactor) * 200;
+            
+            const x = centerX + Math.cos(angle) * radius;
+            const y = centerY + Math.sin(angle) * radius;
+            
+            const hue = (this.config.hue + angle * 57.2958 + this.time * 0.1) % 360;
+            const alpha = 0.3 + Math.sin(this.time * 0.002 + angle) * 0.2;
+            
+            ctx.fillStyle = \`hsla(\${hue}, 70%, 50%, \${alpha})\`;
+            ctx.beginPath();
+            ctx.arc(x, y, 2 + this.config.chaos * 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        this.time += 16;
+        requestAnimationFrame(() => this.render());
+    }
+}
+
+new ExportedHolographicRenderer(document.getElementById('holographic-canvas'));
+<\/script>
+</body></html>`;
+                
+                this.downloadFile(htmlContent, 'vib34d-holographic.html', 'text/html');
+                this.setStatus('HTML file exported', 'success');
+            }
+            
+            exportPNG() {
+                try {
+                    const canvas = document.getElementById('content-canvas');
+                    const link = document.createElement('a');
+                    link.download = `vib34d-variation-${this.currentVariation + 1}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    this.setStatus('PNG image exported', 'success');
+                } catch (error) {
+                    this.setStatus('PNG export failed: ' + error.message, 'error');
+                }
+            }
+            
+            importJSON() {
+                document.getElementById('jsonFileInput').click();
+            }
+            
+            loadJSONConfig(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const config = JSON.parse(e.target.result);
+                        
+                        if (config.type !== 'vib34d-integrated-config') {
+                            throw new Error('Invalid configuration type');
+                        }
+                        
+                        // Apply configuration
+                        this.params = { ...this.params, ...config.parameters };
+                        this.currentVariation = config.variation || 0;
+                        
+                        // Update UI controls
+                        document.getElementById('variationSlider').value = this.currentVariation;
+                        document.getElementById('rot4dXW').value = this.params.rot4dXW;
+                        document.getElementById('rot4dYW').value = this.params.rot4dYW;
+                        document.getElementById('rot4dZW').value = this.params.rot4dZW;
+                        document.getElementById('dimension').value = this.params.dimension;
+                        document.getElementById('gridDensity').value = this.params.gridDensity;
+                        document.getElementById('morphFactor').value = this.params.morphFactor;
+                        document.getElementById('chaos').value = this.params.chaos;
+                        document.getElementById('speed').value = this.params.speed;
+                        document.getElementById('hue').value = this.params.hue;
+                        
+                        this.updateDisplayValues();
+                        this.updateCurrentVariationDisplay();
+                        this.updateVisualizers();
+                        
+                        this.setStatus(`Loaded configuration: ${config.name}`, 'success');
+                    } catch (error) {
+                        this.setStatus('Failed to load configuration: ' + error.message, 'error');
+                    }
+                };
+                reader.readAsText(file);
+            }
+            
+            downloadFile(content, filename, type) {
+                const blob = new Blob([content], { type });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+        
+        // INTEGRATED HOLOGRAPHIC VISUALIZER - Combines both shader systems
+        class IntegratedHolographicVisualizer {
+            constructor(canvasId, role, reactivity, variant) {
+                this.canvas = document.getElementById(canvasId);
+                this.role = role;
+                this.reactivity = reactivity;
+                this.variant = variant;
+                this.gl = this.canvas.getContext('webgl');
+                
+                if (!this.gl) {
+                    console.error(`WebGL not supported for ${canvasId}`);
+                    return;
+                }
+                
+                this.mouseX = 0.5;
+                this.mouseY = 0.5;
+                this.mouseIntensity = 0.0;
+                this.clickIntensity = 0.0;
+                this.startTime = Date.now();
+                
+                // Default parameters
+                this.params = {
+                    rot4dXW: 0.5,
+                    rot4dYW: 0.3,
+                    rot4dZW: 0.2,
+                    dimension: 3.5,
+                    gridDensity: 12.0,
+                    morphFactor: 0.5,
+                    chaos: 0.3,
+                    speed: 1.0,
+                    hue: 180,
+                    geometry: 0
+                };
+                
+                this.initShaders();
+                this.initBuffers();
+                this.resize();
+            }
+            
+            initShaders() {
+                const vertexShaderSource = `
+                    attribute vec2 a_position;
+                    void main() {
+                        gl_Position = vec4(a_position, 0.0, 1.0);
+                    }
+                `;
+                
+                // Combined fragment shader with both systems
+                const fragmentShaderSource = `
+                    precision highp float;
+                    
+                    uniform vec2 u_resolution;
+                    uniform float u_time;
+                    uniform vec2 u_mouse;
+                    uniform float u_geometry;
+                    uniform float u_gridDensity;
+                    uniform float u_morphFactor;
+                    uniform float u_chaos;
+                    uniform float u_speed;
+                    uniform float u_hue;
+                    uniform float u_dimension;
+                    uniform float u_rot4dXW;
+                    uniform float u_rot4dYW;
+                    uniform float u_rot4dZW;
+                    uniform float u_mouseIntensity;
+                    uniform float u_clickIntensity;
+                    uniform float u_roleIntensity;
+                    
+                    // 4D rotation matrices from Polytopal system
+                    mat4 rotateXW(float theta) {
+                        float c = cos(theta);
+                        float s = sin(theta);
+                        return mat4(c, 0, 0, -s, 0, 1, 0, 0, 0, 0, 1, 0, s, 0, 0, c);
+                    }
+                    
+                    mat4 rotateYW(float theta) {
+                        float c = cos(theta);
+                        float s = sin(theta);
+                        return mat4(1, 0, 0, 0, 0, c, 0, -s, 0, 0, 1, 0, 0, s, 0, c);
+                    }
+                    
+                    mat4 rotateZW(float theta) {
+                        float c = cos(theta);
+                        float s = sin(theta);
+                        return mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, c, -s, 0, 0, s, c);
+                    }
+                    
+                    vec3 project4Dto3D(vec4 p) {
+                        float w = 2.5 / (2.5 + p.w);
+                        return vec3(p.x * w, p.y * w, p.z * w);
+                    }
+                    
+                    // VIB3 Geometry Library from Active Holographic Systems
+                    float tetrahedronLattice(vec3 p, float gridSize) {
+                        vec3 q = fract(p * gridSize) - 0.5;
+                        float d1 = length(q);
+                        float d2 = length(q - vec3(0.4, 0.0, 0.0));
+                        float d3 = length(q - vec3(0.0, 0.4, 0.0));
+                        float d4 = length(q - vec3(0.0, 0.0, 0.4));
+                        float vertices = 1.0 - smoothstep(0.0, 0.04, min(min(d1, d2), min(d3, d4)));
+                        float edges = 0.0;
+                        edges = max(edges, 1.0 - smoothstep(0.0, 0.02, abs(length(q.xy) - 0.2)));
+                        edges = max(edges, 1.0 - smoothstep(0.0, 0.02, abs(length(q.yz) - 0.2)));
+                        edges = max(edges, 1.0 - smoothstep(0.0, 0.02, abs(length(q.xz) - 0.2)));
+                        return max(vertices, edges * 0.5);
+                    }
+                    
+                    float hypercubeLattice(vec3 p, float gridSize) {
+                        vec3 grid = fract(p * gridSize);
+                        vec3 edges = 1.0 - smoothstep(0.0, 0.03, abs(grid - 0.5));
+                        return max(max(edges.x, edges.y), edges.z);
+                    }
+                    
+                    float sphereLattice(vec3 p, float gridSize) {
+                        vec3 q = fract(p * gridSize) - 0.5;
+                        float r = length(q);
+                        return 1.0 - smoothstep(0.2, 0.5, r);
+                    }
+                    
+                    float torusLattice(vec3 p, float gridSize) {
+                        vec3 q = fract(p * gridSize) - 0.5;
+                        float r1 = sqrt(q.x*q.x + q.y*q.y);
+                        float r2 = sqrt((r1 - 0.3)*(r1 - 0.3) + q.z*q.z);
+                        return 1.0 - smoothstep(0.0, 0.1, r2);
+                    }
+                    
+                    float kleinLattice(vec3 p, float gridSize) {
+                        vec3 q = fract(p * gridSize);
+                        float u = q.x * 2.0 * 3.14159;
+                        float v = q.y * 2.0 * 3.14159;
+                        float x = cos(u) * (3.0 + cos(u/2.0) * sin(v) - sin(u/2.0) * sin(2.0*v));
+                        float klein = length(vec2(x, q.z)) - 0.1;
+                        return 1.0 - smoothstep(0.0, 0.05, abs(klein));
+                    }
+                    
+                    float fractalLattice(vec3 p, float gridSize) {
+                        vec3 q = p * gridSize;
+                        float scale = 1.0;
+                        float fractal = 0.0;
+                        for(int i = 0; i < 4; i++) {
+                            q = fract(q) - 0.5;
+                            fractal += abs(length(q)) / scale;
+                            scale *= 2.0;
+                            q *= 2.0;
+                        }
+                        return 1.0 - smoothstep(0.0, 1.0, fractal);
+                    }
+                    
+                    float waveLattice(vec3 p, float gridSize) {
+                        vec3 q = p * gridSize;
+                        float wave = sin(q.x * 2.0) * sin(q.y * 2.0) * sin(q.z * 2.0 + u_time * 0.001);
+                        return smoothstep(-0.5, 0.5, wave);
+                    }
+                    
+                    float crystalLattice(vec3 p, float gridSize) {
+                        vec3 q = fract(p * gridSize) - 0.5;
+                        float d = max(max(abs(q.x), abs(q.y)), abs(q.z));
+                        return 1.0 - smoothstep(0.3, 0.5, d);
+                    }
+                    
+                    float getGeometry(vec3 p, float gridSize, float geometryType) {
+                        if (geometryType < 0.5) return tetrahedronLattice(p, gridSize);
+                        else if (geometryType < 1.5) return hypercubeLattice(p, gridSize);
+                        else if (geometryType < 2.5) return sphereLattice(p, gridSize);
+                        else if (geometryType < 3.5) return torusLattice(p, gridSize);
+                        else if (geometryType < 4.5) return kleinLattice(p, gridSize);
+                        else if (geometryType < 5.5) return fractalLattice(p, gridSize);
+                        else if (geometryType < 6.5) return waveLattice(p, gridSize);
+                        else return crystalLattice(p, gridSize);
+                    }
+                    
+                    vec3 hsv2rgb(vec3 c) {
+                        vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+                        vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+                        return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+                    }
+                    
+                    void main() {
+                        vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+                        float aspectRatio = u_resolution.x / u_resolution.y;
+                        uv.x *= aspectRatio;
+                        uv -= 0.5;
+                        
+                        // Enhanced 4D space with integrated systems
+                        float time = u_time * 0.001 * u_speed;
+                        vec2 mouseOffset = (u_mouse - 0.5) * u_mouseIntensity * 0.5;
+                        
+                        vec4 p4d = vec4(uv + mouseOffset * 0.1, 
+                                       sin(time * 0.1 + u_morphFactor) * 0.15, 
+                                       cos(time * 0.08) * 0.15);
+                        
+                        // 4D rotations from Polytopal system
+                        p4d = rotateXW(time * 0.2 * u_rot4dXW + mouseOffset.y * 0.5) * p4d;
+                        p4d = rotateYW(time * 0.15 * u_rot4dYW + mouseOffset.x * 0.5) * p4d;
+                        p4d = rotateZW(time * 0.25 * u_rot4dZW + u_clickIntensity * 0.3) * p4d;
+                        
+                        vec3 p = project4Dto3D(p4d);
+                        
+                        // Enhanced dimension morphing
+                        if (u_dimension > 3.0) {
+                            float w = sin(length(p) * 3.0 + time * 0.3) * (u_dimension - 3.0);
+                            p4d = vec4(p, w);
+                            p = project4Dto3D(p4d);
+                        }
+                        
+                        // Get geometry with morphing
+                        float morphedGeometry = u_geometry + u_morphFactor * 2.0;
+                        float lattice = getGeometry(p, u_gridDensity, morphedGeometry);
+                        
+                        // Enhanced coloring system
+                        float hue = u_hue / 360.0 + u_mouseIntensity * 0.2 + lattice * 0.1;
+                        float saturation = 0.8 + u_clickIntensity * 0.2;
+                        float brightness = 0.2 + lattice * 0.8 + u_mouseIntensity * 0.15;
+                        
+                        vec3 color = hsv2rgb(vec3(hue, saturation, brightness));
+                        
+                        // Chaos effects
+                        color += vec3(sin(uv.x * 30.0 + time) * u_chaos * 0.1);
+                        color += vec3(cos(uv.y * 28.0 + time) * u_chaos * 0.1);
+                        
+                        // Mouse glow
+                        float mouseDist = length(uv - (u_mouse - 0.5) * vec2(aspectRatio, 1.0));
+                        float mouseGlow = exp(-mouseDist * 1.5) * u_mouseIntensity * 0.3;
+                        color += vec3(mouseGlow);
+                        
+                        // Click pulse
+                        float clickPulse = u_clickIntensity * exp(-mouseDist * 2.0) * 0.4;
+                        color += vec3(clickPulse, clickPulse * 0.5, clickPulse * 1.5);
+                        
+                        // Role intensity adjustment
+                        color *= u_roleIntensity;
+                        
+                        gl_FragColor = vec4(color, 0.95);
+                    }
+                `;
+                
+                this.program = this.createProgram(vertexShaderSource, fragmentShaderSource);
+                this.uniforms = {
+                    resolution: this.gl.getUniformLocation(this.program, 'u_resolution'),
+                    time: this.gl.getUniformLocation(this.program, 'u_time'),
+                    mouse: this.gl.getUniformLocation(this.program, 'u_mouse'),
+                    geometry: this.gl.getUniformLocation(this.program, 'u_geometry'),
+                    gridDensity: this.gl.getUniformLocation(this.program, 'u_gridDensity'),
+                    morphFactor: this.gl.getUniformLocation(this.program, 'u_morphFactor'),
+                    chaos: this.gl.getUniformLocation(this.program, 'u_chaos'),
+                    speed: this.gl.getUniformLocation(this.program, 'u_speed'),
+                    hue: this.gl.getUniformLocation(this.program, 'u_hue'),
+                    dimension: this.gl.getUniformLocation(this.program, 'u_dimension'),
+                    rot4dXW: this.gl.getUniformLocation(this.program, 'u_rot4dXW'),
+                    rot4dYW: this.gl.getUniformLocation(this.program, 'u_rot4dYW'),
+                    rot4dZW: this.gl.getUniformLocation(this.program, 'u_rot4dZW'),
+                    mouseIntensity: this.gl.getUniformLocation(this.program, 'u_mouseIntensity'),
+                    clickIntensity: this.gl.getUniformLocation(this.program, 'u_clickIntensity'),
+                    roleIntensity: this.gl.getUniformLocation(this.program, 'u_roleIntensity')
+                };
+            }
+            
+            createProgram(vertexSource, fragmentSource) {
+                const vertexShader = this.createShader(this.gl.VERTEX_SHADER, vertexSource);
+                const fragmentShader = this.createShader(this.gl.FRAGMENT_SHADER, fragmentSource);
+                
+                const program = this.gl.createProgram();
+                this.gl.attachShader(program, vertexShader);
+                this.gl.attachShader(program, fragmentShader);
+                this.gl.linkProgram(program);
+                
+                if (!this.gl.getProgramParameter(program, this.gl.LINK_STATUS)) {
+                    console.error('Program linking failed:', this.gl.getProgramInfoLog(program));
+                    return null;
+                }
+                
+                return program;
+            }
+            
+            createShader(type, source) {
+                const shader = this.gl.createShader(type);
+                this.gl.shaderSource(shader, source);
+                this.gl.compileShader(shader);
+                
+                if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
+                    console.error('Shader compilation failed:', this.gl.getShaderInfoLog(shader));
+                    return null;
+                }
+                
+                return shader;
+            }
+            
+            initBuffers() {
+                const positions = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
+                
+                this.buffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffer);
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, positions, this.gl.STATIC_DRAW);
+                
+                const positionLocation = this.gl.getAttribLocation(this.program, 'a_position');
+                this.gl.enableVertexAttribArray(positionLocation);
+                this.gl.vertexAttribPointer(positionLocation, 2, this.gl.FLOAT, false, 0, 0);
+            }
+            
+            resize() {
+                this.canvas.width = this.canvas.clientWidth;
+                this.canvas.height = this.canvas.clientHeight;
+                this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+            }
+            
+            updateParams(params) {
+                this.params = { ...this.params, ...params };
+            }
+            
+            updateInteraction(mouseX, mouseY, intensity) {
+                this.mouseX = mouseX;
+                this.mouseY = mouseY;
+                this.mouseIntensity = intensity * this.reactivity;
+            }
+            
+            render() {
+                if (!this.program) return;
+                
+                this.resize();
+                this.gl.useProgram(this.program);
+                
+                // Role-specific intensity
+                const roleIntensities = {
+                    'background': 0.3,
+                    'shadow': 0.5,
+                    'content': 1.0,
+                    'highlight': 0.7,
+                    'accent': 0.4
+                };
+                
+                const time = Date.now() - this.startTime;
+                
+                // Set uniforms
+                this.gl.uniform2f(this.uniforms.resolution, this.canvas.width, this.canvas.height);
+                this.gl.uniform1f(this.uniforms.time, time);
+                this.gl.uniform2f(this.uniforms.mouse, this.mouseX, this.mouseY);
+                this.gl.uniform1f(this.uniforms.geometry, this.params.geometry);
+                this.gl.uniform1f(this.uniforms.gridDensity, this.params.gridDensity);
+                this.gl.uniform1f(this.uniforms.morphFactor, this.params.morphFactor);
+                this.gl.uniform1f(this.uniforms.chaos, this.params.chaos);
+                this.gl.uniform1f(this.uniforms.speed, this.params.speed);
+                this.gl.uniform1f(this.uniforms.hue, this.params.hue);
+                this.gl.uniform1f(this.uniforms.dimension, this.params.dimension);
+                this.gl.uniform1f(this.uniforms.rot4dXW, this.params.rot4dXW);
+                this.gl.uniform1f(this.uniforms.rot4dYW, this.params.rot4dYW);
+                this.gl.uniform1f(this.uniforms.rot4dZW, this.params.rot4dZW);
+                this.gl.uniform1f(this.uniforms.mouseIntensity, this.mouseIntensity);
+                this.gl.uniform1f(this.uniforms.clickIntensity, this.clickIntensity);
+                this.gl.uniform1f(this.uniforms.roleIntensity, roleIntensities[this.role] || 1.0);
+                
+                this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
+            }
+        }
+        
+        // Global functions
+        let engine = null;
+        
+        function togglePanel() {
+            const panel = document.querySelector('.editor-panel');
+            const btn = document.querySelector('.minimize-btn');
+            panel.classList.toggle('minimized');
+            
+            if (panel.classList.contains('minimized')) {
+                btn.textContent = '◀';
+            } else {
+                btn.textContent = '−';
+            }
+        }
+        
+        function previousVariation() {
+            if (engine) {
+                engine.setVariation(engine.currentVariation - 1);
+            }
+        }
+        
+        function nextVariation() {
+            if (engine) {
+                engine.setVariation(engine.currentVariation + 1);
+            }
+        }
+        
+        function randomVariation() {
+            if (engine) {
+                const randomVar = Math.floor(Math.random() * engine.totalVariations);
+                engine.setVariation(randomVar);
+            }
+        }
+        
+        function exportJSON() {
+            if (engine) engine.exportJSON();
+        }
+        
+        function exportCSS() {
+            if (engine) engine.exportCSS();
+        }
+        
+        function exportHTML() {
+            if (engine) engine.exportHTML();
+        }
+        
+        function exportPNG() {
+            if (engine) engine.exportPNG();
+        }
+        
+        function importJSON() {
+            if (engine) engine.importJSON();
+        }
+        
+        function randomizeAll() {
+            if (engine) {
+                engine.params.rot4dXW = Math.random() * 4 - 2;
+                engine.params.rot4dYW = Math.random() * 4 - 2;
+                engine.params.rot4dZW = Math.random() * 4 - 2;
+                engine.params.dimension = 3.0 + Math.random() * 1.5;
+                engine.params.gridDensity = 4 + Math.random() * 26;
+                engine.params.morphFactor = Math.random() * 2;
+                engine.params.chaos = Math.random();
+                engine.params.speed = 0.1 + Math.random() * 2.9;
+                engine.params.hue = Math.random() * 360;
+                engine.params.geometry = Math.floor(Math.random() * 8);
+                
+                // Update UI
+                document.getElementById('rot4dXW').value = engine.params.rot4dXW;
+                document.getElementById('rot4dYW').value = engine.params.rot4dYW;
+                document.getElementById('rot4dZW').value = engine.params.rot4dZW;
+                document.getElementById('dimension').value = engine.params.dimension;
+                document.getElementById('gridDensity').value = engine.params.gridDensity;
+                document.getElementById('morphFactor').value = engine.params.morphFactor;
+                document.getElementById('chaos').value = engine.params.chaos;
+                document.getElementById('speed').value = engine.params.speed;
+                document.getElementById('hue').value = engine.params.hue;
+                
+                engine.updateDisplayValues();
+                engine.updateVisualizers();
+                engine.setStatus('All parameters randomized', 'success');
+            }
+        }
+        
+        function resetToDefaults() {
+            if (engine) {
+                engine.setVariation(0);
+            }
+        }
+        
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            engine = new VIB34DIntegratedEngine();
+            
+            // Setup file input handler
+            document.getElementById('jsonFileInput').addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    engine.loadJSONConfig(e.target.files[0]);
+                }
+            });
+            
+            console.log('✅ VIB34D Integrated Engine loaded successfully!');
+            console.log('🎯 Features:');
+            console.log('   • 5-Layer Holographic System');
+            console.log('   • 30 VIB3 Variations');
+            console.log('   • 4D Polytopal Mathematics');
+            console.log('   • Complete Export/Import System');
+            console.log('   • Agent-Ready JSON Workflow');
+        });
+    </script>
+</body>
+</html>
